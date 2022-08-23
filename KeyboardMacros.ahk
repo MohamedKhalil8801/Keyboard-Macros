@@ -14,7 +14,7 @@ SetCapsLockState, AlwaysOff
 ; SoundSet, 85, Master, VOLUME, 6 ; Setting Mic's volume to 85
 
 Active := 0
-
+OneHanded := 0
 
 Run, powershell -Command "$Process = Get-Process AutoHotKey; $Process.ProcessorAffinity=62", , Hide
 
@@ -60,6 +60,7 @@ SetDefaultKeyboard(LocaleID){
 
 ; Change language
 ~LShift::
+	OneHanded := 0
 	if (DoubleTap("~LShift", 300)){
 		Send {Alt downtemp}{Shift downtemp}{Alt up}{Shift up}
 		
@@ -77,7 +78,15 @@ SetDefaultKeyboard(LocaleID){
 return
 ; Open emoji panel when double clicking capslock
 ~CapsLock::
-	if (DoubleTap("~CapsLock", 230))
+	Active := 1
+	OneHanded := 0
+return
+
+~Tab:: OneHanded := 0
+
+~RShift::
+	OneHanded := 0
+	if (DoubleTap("~RShift", 230))
 	{
 		SetDefaultKeyboard(0x0409)
 		Sleep, 200
@@ -92,8 +101,19 @@ return
 		}
 		
 		send {LWin up}
-	} else{
-		Active := 1
+	}
+return
+
+~LCtrl::
+	if (DoubleTap("~LCtrl", 230))
+	{
+		if(OneHanded == 0){
+			OneHanded := 1
+		} else {
+			OneHanded := 0
+		}
+	} else {
+		OneHanded := 0
 	}
 return
 
@@ -124,10 +144,39 @@ DoubleTap(Key, MaxTime)
 	return (A_PriorHotKey == Key AND A_TimeSincePriorHotkey < MaxTime  AND A_TimeSincePriorHotkey > 100) == 1
 }
 
-#If (GetKeyState("CapsLock", "P"))
+#If (OneHanded == 1)
 	Active := 1
 	
-	MsgBox Active
+	; arrow keys
+	i::up
+	j::left
+	k::down
+	l::right
+	
+	; jump keys
+	h::Send, ^{left}
+	`;::Send, ^{right}
+	
+	;h::Send, +^{Left}
+	;`;::Send, +^{Right}
+
+	; page up/page down & home/end
+	o::
+		if (DoubleTap("o", 300))
+			Send, {home}
+		else
+			Send, {PgUp}
+	return
+	m::
+		if (DoubleTap("m", 300))
+			Send, {end}
+		else
+			Send, {PgDn}
+	return
+#If
+
+#If (GetKeyState("CapsLock", "P"))
+	Active := 1
 	
 	; arrow keys
 	i::up
