@@ -16,7 +16,7 @@ SetCapsLockState, AlwaysOff
 Active := 0
 OneHanded := 0
 
-Run, powershell -Command "$Process = Get-Process AutoHotKey; $Process.ProcessorAffinity=62", , Hide
+Run, powershell.exe -Command "$Process = Get-Process AutoHotKey; $Process.ProcessorAffinity=62", , Hide
 
 
 AppsKey::Send {Media_Play_Pause}
@@ -126,7 +126,7 @@ return
 		;MsgBox, %Screen_X%x%Screen_Y%
 		MouseMove, %Screen_X%, 50
 		Click Left
-		SoundSet, 85, Master, VOLUME, 6 ; Setting Mic's volume to 85
+		;SoundSet, 85, Master, VOLUME, 6 ; Setting Mic's volume to 85
 	}
 	else
 	{
@@ -135,7 +135,7 @@ return
 		;MsgBox, %Screen_X%x%Screen_Y%
 		MouseMove, %Screen_X%, %Screen_Y%
 		Click Left
-		SoundSet, 85, Master, VOLUME, 6 ; Setting Mic's volume to 85
+		;SoundSet, 85, Master, VOLUME, 6 ; Setting Mic's volume to 85
 	}	
 return
 
