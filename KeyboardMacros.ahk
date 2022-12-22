@@ -23,6 +23,18 @@ AppsKey::Send {Media_Play_Pause}
 AppsKey & R::Reload
 AppsKey & S::Suspend
 
+; Translate highlighted text by pressing RCtrl
+RCtrl:: 
+	Send, ^c
+	sleep, 50
+	Send, !`;
+	sleep, 50
+	Send, Translate
+	Send, {Tab}
+	Send, ^v
+	Send, {RCtrl Up}{Alt Up}{Tab Up}{`; Up}
+return
+
 +Backspace::
 	Send {Home}{Shift downtemp}{End}{Right}{ShiftUp}{Del} ; Delete line
 	
@@ -76,7 +88,7 @@ SetDefaultKeyboard(LocaleID){
 	}
 
 return
-; Open emoji panel when double clicking capslock
+
 ~CapsLock::
 	Active := 1
 	OneHanded := 0
@@ -84,6 +96,7 @@ return
 
 ~Tab:: OneHanded := 0
 
+; Open emoji panel when double clicking RShift
 ~RShift::
 	OneHanded := 0
 	if (DoubleTap("~RShift", 230))
