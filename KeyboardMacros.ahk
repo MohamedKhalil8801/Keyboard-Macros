@@ -18,7 +18,6 @@ OneHanded := 0
 
 Run, powershell.exe -Command "$Process = Get-Process AutoHotKey; $Process.ProcessorAffinity=62", , Hide
 
-
 AppsKey::Send {Media_Play_Pause}
 AppsKey & R::Reload
 AppsKey & S::Suspend
@@ -28,10 +27,13 @@ RCtrl::
 	Send, ^c
 	sleep, 50
 	Send, !`;
-	sleep, 50
+	sleep, 100
 	Send, Translate
+	sleep, 100
 	Send, {Tab}
+	sleep, 100
 	Send, ^v
+	sleep, 50
 	Send, {RCtrl Up}{Alt Up}{Tab Up}{`; Up}
 return
 
@@ -160,6 +162,8 @@ DoubleTap(Key, MaxTime)
 #If (OneHanded == 1)
 	Active := 1
 	
+	Space::Send {Down}
+
 	; arrow keys
 	i::up
 	j::left
@@ -245,7 +249,6 @@ DoubleTap(Key, MaxTime)
 	Backspace::^Backspace
 	
 	; Select mode
-	SPACE::dummy=0
 	SPACE & i::+up
 	SPACE & j::+left
 	SPACE & k::+down
