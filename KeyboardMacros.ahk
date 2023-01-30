@@ -14,7 +14,6 @@ ListLines Off
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 #SingleInstance Force
-SetTitleMatchMode 2
 DllCall("ntdll\ZwSetTimerResolution","Int",5000,"Int",1,"Int*",MyCurrentTimerResolution) ;setting the Windows Timer Resolution to 0.5ms, THIS IS A GLOBAL CHANGE
 Process, Priority,, High
 SetKeyDelay, -1
@@ -24,6 +23,7 @@ SetControlDelay, -1
 SetWinDelay, -1
 SetBatchLines, -1
 SetCapsLockState, AlwaysOff	 
+DetectHiddenWindows, On
 ; SoundSet, 85, Master, VOLUME, 6 ; Setting Mic's volume to 85
 DllCall("Sleep","UInt",1)
 GroupAdd All
@@ -39,6 +39,8 @@ Menu Case, Add, &Reverse, CCase
 
 Active := 0
 OneHanded := 0
+active_monitor := 2 ; Control var for toggling between last active windows on each monitor
+i := 0 ; Control var for toggling between Minimize/Maximize/Restore for active window
 
 Run, powershell.exe -Command "$Process = Get-Process AutoHotKey; $Process.ProcessorAffinity=62", , Hide
 
@@ -183,48 +185,7 @@ DoubleTap(Key, MaxTime)
 	return (A_PriorHotKey == Key AND A_TimeSincePriorHotkey < MaxTime  AND A_TimeSincePriorHotkey > 100) == 1
 }
 
-
-#If (OneHanded == 1)
-	Active := 1
-	
-	Space::Send {Down}
-
-	; arrow keys
-	i::up
-	j::left
-	k::down
-	l::right
-	
-	; page up/page down & home/end
-	o::
-		if (DoubleTap("o", 300))
-			Send, {home}
-		else
-			Send, {PgUp}
-	return
-	m::
-		if (DoubleTap("m", 300))
-			Send, {end}
-		else
-			Send, {PgDn}
-	return
-	
-	; jump keys
-	h::
-		if (DoubleTap("h", 200))
-			Send, {home}
-		else
-			Send, ^{left}
-	return
-	`;::
-		if (DoubleTap("`;", 200))
-			Send, {end}
-		else
-			Send, ^{Right}
-	return
-#If
-
-#If (GetKeyState("CapsLock", "P"))
+#If (GetKeyState("CapsLock", "P") or (OneHanded == 1))
 	Active := 1
 	
 	; arrow keys
@@ -294,15 +255,139 @@ DoubleTap(Key, MaxTime)
 	SPACE & o::Send, +{home}
 	SPACE & m::Send, +{end}
 	
+	x::!F4
+	
 	 
 	u::
 		GetText(TempText)
 		If NOT ERRORLEVEL
 		   Menu Case, Show
 	Return
+	
+	; Toggle between last active windows on each monitor
+	RShift::
+		if (active_monitor = 1)
+			active_monitor := 2
+		else if (active_monitor = 2)
+			active_monitor := 1
+		;MsgBox % active_monitor
+		SysGet, Mon, Monitor, %active_monitor%
+		;MsgBox, %active_monitor%: Left: %MonLeft% -- Top: %MonTop% -- Right: %MonRight% -- Bottom %MonBottom%
+		list := ""
+		WinGet, id, list
+		Loop, %id%
+		{
+			this_ID := id%A_Index%
+			WinGetClass, Class, ahk_id %this_ID%
+				If (Class = "")
+					continue
+			WinGetTitle, title, ahk_id %this_ID%
+				If (title = "")
+					continue
+			If !IsWindow(WinExist("ahk_id" . this_ID))
+					continue
+			WinGetPos, X,,,, ahk_id %this_ID%
+			;MsgBox, % X
+				if ((active_monitor = 1 and X >= (MonRight - 10)) or (active_monitor = 2 and X <= (MonLeft - 10)))
+					continue
+			WinActivate, ahk_id %this_ID%, ,2
+					break
+		}
+	return
+	
+	; Switch active window to the other monitor
+	Enter::
+		MMPrimDPI := 0.9179 ;DPI Scale of the primary monitor (divided by 100).
+		MMSecDPI := 0.8471  ;DPI Scale of the secondary monitor (divided by 100).
+		SysGet, MMCount, MonitorCount
+		SysGet, MMPrimary, MonitorPrimary
+		SysGet, MMPrimLRTB, Monitor, MMPrimary
+		WinGetPos, MMWinGetX, MMWinGetY, MMWinGetWidth, MMWinGetHeight, A
+		MMDPISub := Abs(MMPrimDPI - MMSecDPI) + 1
+		;Second mon is off, window is lost, bring to primary
+		if ( (MMCount = 1) and !((MMWinGetX > MMPrimLRTBLeft + 20) and (MMWinGetX < MMPrimLRTBRight - 20) and (MMWinGetY > MMPrimLRTBTop + 20) and (MMWinGetY < MMPrimLRTBBottom - 20)) ){
+			if ((MMPrimDPI - MMSecDPI) >= 0)
+				MMWHRatio := 1 / MMDPISub
+			Else
+				MMWHRatio := MMDPISub
+			MMWinMoveWidth := MMWinGetWidth * MMWHRatio
+			MMWinMoveHeight := MMWinGetHeight * MMWHRatio
+			WinMove, A,, 0, 0, MMWinMoveWidth, MMWinMoveHeight
+			WinMove, A,, 0, 0, MMWinMoveWidth, MMWinMoveHeight ;Fail safe
+			return
+		}
+		if (MMPrimary = 1)
+			SysGet, MMSecLRTB, Monitor, 2
+		Else
+			SysGet, MMSecLRTB, Monitor, 1
+		MMSecW := MMSecLRTBRight - MMSecLRTBLeft
+		MMSecH := MMSecLRTBBottom - MMSecLRTBTop
+		;Primary to secondary
+		if ( (MMWinGetX > MMPrimLRTBLeft - 20) and (MMWinGetX < MMPrimLRTBRight + 20) and (MMWinGetY > MMPrimLRTBTop - 20) and (MMWinGetY < MMPrimLRTBBottom + 20) ){
+			if ( (MMSecW) and (MMSecH) ){ ;Checks if sec mon exists. Could have used MMCount instead: if (MMCount >= 2){}
+				if ((MMSecDPI - MMPrimDPI) >= 0){
+					MMWidthRatio := (MMSecW / A_ScreenWidth) / MMDPISub
+					MMHeightRatio := (MMSecH / A_ScreenHeight) / MMDPISub
+				}
+				Else {
+					MMWidthRatio := (MMSecW / A_ScreenWidth) * MMDPISub
+					MMHeightRatio := (MMSecH / A_ScreenHeight) * MMDPISub            
+				}
+				MMWinMoveX := (MMWinGetX * MMWidthRatio) + MMSecLRTBLeft
+				MMWinMoveY := (MMWinGetY * MMHeightRatio) + MMSecLRTBTop
+				if (MMSecLRTBBottom - MMWinMoveY < 80) ;Check if window is going under taskbar and fixes it.
+					MMWinMoveY -= 80
+				MMWinMoveWidth := MMWinGetWidth * MMWidthRatio
+				MMWinMoveHeight := MMWinGetHeight * MMHeightRatio
+				WinMove, A,, MMWinMoveX, MMWinMoveY, MMWinMoveWidth, MMWinMoveHeight
+				WinMove, A,, MMWinMoveX, MMWinMoveY, MMWinMoveWidth, MMWinMoveHeight
+			}
+		} ;Secondary to primary
+		Else if ( (MMWinGetX > MMSecLRTBLeft - 20) and (MMWinGetX < MMSecLRTBRight + 20) and (MMWinGetY > MMSecLRTBTop - 20) and (MMWinGetY < MMSecLRTBBottom + 20) ){
+			if ( (MMSecW) and (MMSecH) ){
+				if ((MMPrimDPI - MMSecDPI) >= 0){
+					MMWidthRatio := (A_ScreenWidth / MMSecW) / MMDPISub
+					MMHeightRatio := (A_ScreenHeight / MMSecH) / MMDPISub
+				}
+				Else{
+					MMWidthRatio := (A_ScreenWidth / MMSecW) * MMDPISub
+					MMHeightRatio := (A_ScreenHeight / MMSecH) * MMDPISub
+				}
+				MMWinMoveX := (MMWinGetX - MMSecLRTBLeft) * MMWidthRatio
+				MMWinMoveY := (MMWinGetY - MMSecLRTBTop) * MMHeightRatio
+				if (MMPrimLRTBBottom - MMWinMoveY < 80)
+					MMWinMoveY -= 80
+				MMWinMoveWidth := MMWinGetWidth * MMWidthRatio
+				MMWinMoveHeight := MMWinGetHeight * MMHeightRatio
+				WinMove, A,, MMWinMoveX, MMWinMoveY, MMWinMoveWidth, MMWinMoveHeight
+				WinMove, A,, MMWinMoveX, MMWinMoveY, MMWinMoveWidth, MMWinMoveHeight
+			}
+		} ;If window is out of current monitors' boundaries or if script fails
+		Else{
+			MsgBox, 4, MM, % "Current window is in " MMWinGetX " " MMWinGetY "`nDo you want to move it to 0,0?"
+			IfMsgBox Yes
+			WinMove, A,, 0, 0
+		}
+	return
+	
+	; Toggle between Minimize/Maximize/Restore for active window
+	\::
+		WinGetActiveTitle, WinTitle
+		if ( Mod( i, 3 ) = 0 )
+		{
+			WinMaximize % ( WinTitle, i++ )
+		}
+		else if ( Mod( i, 3 ) = 1 )
+		{
+			WinMinimize % ( Stored := WinTitle, i++ )
+		}
+		else if ( Mod( i, 3 ) = 2 )
+		{
+			WinActivateBottom % Stored	
+			WinRestore % ( Stored, i++ )
+		}
+	Return
 #If
-
-; Enter::MsgBox % GetKeyState("CapsLock", "P") . Active
 
 CapsLock up::
 	send {Shift up}{Ctrl up}{Alt up}{SPACE up}
@@ -371,3 +456,102 @@ PutText(MyText)
    Clipboard := SavedClip
    Return
 }
+
+
+;-----------------------------------------------------------------
+; Check whether the target window is activation target
+;-----------------------------------------------------------------
+IsWindow(hWnd){
+    WinGet, dwStyle, Style, ahk_id %hWnd%
+    if ((dwStyle&0x08000000) || !(dwStyle&0x10000000)) {
+        return false
+    }
+    WinGet, dwExStyle, ExStyle, ahk_id %hWnd%
+    if (dwExStyle & 0x00000080) {
+        return false
+    }
+    WinGetClass, szClass, ahk_id %hWnd%
+    if (szClass = "TApplication") {
+        return false
+    }
+	;MsgBox % hWnd
+    return true
+}
+
+
+; ; == HOT STRINGS ==
+
+; ; Current date and time
+FormatDateTime(format, datetime="") {
+    if (datetime = "") {
+        datetime := A_Now
+    }
+    FormatTime, CurrentDateTime, %datetime%, %format%
+    SendInput, %CurrentDateTime%
+    return
+}
+
+GetIP(URL){
+	http:=ComObjCreate("WinHttp.WinHttpRequest.5.1")
+	http.Open("GET",URL,1)
+	http.Send()
+	http.WaitForResponse
+	If (http.ResponseText="Error"){
+		MsgBox 16, IP Address, Sorry, your public IP address could not be detected
+		Return
+	}
+	send % http.ResponseText
+}
+
+
+; Hotstrings
+:C*:/datetime1::
+    FormatDateTime("dddd, MMMM dd, yyyy, HH:mm")
+Return
+
+:C*:/datetime::
+    FormatDateTime("dddd, MMMM dd, yyyy hh:mm tt")
+Return
+:C*:/time1::
+    FormatDateTime("HH:mm")
+Return
+:C*:/time::
+    FormatDateTime("hh:mm tt")
+Return
+::/date:: January 30, 2023
+    FormatDateTime("MMMM dd, yyyy")
+Return
+:C*:/date1::
+    FormatDateTime("MM/dd/yyyy")
+Return
+::/day::
+    FormatDateTime("dddd")
+Return
+:C*:/day1::
+    FormatDateTime("dd")
+Return
+::/month::
+    FormatDateTime("MMMM")
+Return
+:C*:/month1::
+    FormatDateTime("MM")
+Return
+:C*:/year::
+    FormatDateTime("yyyy")
+Return
+
+:C*:/j::jupyter notebook
+:C*:/r1::192.168.1.1
+:C*:/r2::192.168.0.1
+:C*:/e1::zchggf11@hotmail.com
+:C*:/e2::mohamedkhalil8801@gmail.com
+
+:C*:/ip1:: 
+	GetIP("http://www.netikus.net/show_ip.html")
+Return
+
+:C*:/ip2:: 
+	send % A_IPAddress2
+Return
+
+:C*:/text::Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
