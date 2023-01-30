@@ -10,6 +10,7 @@ if not A_IsAdmin
 #MaxHotkeysPerInterval 99000000
 #HotkeyInterval 99000000
 #KeyHistory 0
+#WinActivateForce
 ListLines Off
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
@@ -23,7 +24,7 @@ SetControlDelay, -1
 SetWinDelay, -1
 SetBatchLines, -1
 SetCapsLockState, AlwaysOff	 
-DetectHiddenWindows, On
+;DetectHiddenWindows, On
 ; SoundSet, 85, Master, VOLUME, 6 ; Setting Mic's volume to 85
 DllCall("Sleep","UInt",1)
 GroupAdd All
@@ -263,6 +264,46 @@ DoubleTap(Key, MaxTime)
 		If NOT ERRORLEVEL
 		   Menu Case, Show
 	Return
+	
+	
+	; Switching apps
+	1::
+		wTitle = ahk_class Chrome_WidgetWin_1 ahk_exe msedge.exe
+		If WinExist(wTitle)
+			WinActivate
+		else
+			WinActivate, ahk_exe vivaldi.exe
+	return
+		
+	2::	
+		If WinExist("ahk_exe code.exe")
+			WinActivate
+		else
+			WinActivate, ahk_exe pycharm64.exe
+	return
+	
+	3:: 
+		If WinExist("ahk_exe notepad++.exe")
+			WinActivate
+		else
+			Run notepad++.exe
+	return
+	
+	4::
+		If WinExist("ahk_exe cmd.exe")
+			WinActivate
+		else
+			Run cmd.exe
+	return
+	
+	5:: WinActivate, ahk_exe OneCommander.exe
+	
+	7::
+		If WinExist("Calculator")
+			WinActivate
+		else
+			Run calc.exe
+	return
 	
 	; Toggle between last active windows on each monitor
 	RShift::
@@ -541,16 +582,16 @@ Return
 Return
 
 :C*:/j::jupyter notebook
-:C*:/r1::192.168.1.1
-:C*:/r2::192.168.0.1
-:C*:/e1::zchggf11@hotmail.com
-:C*:/e2::mohamedkhalil8801@gmail.com
+::/router::192.168.1.1
+:C*:/router1::192.168.0.1
+::/mail::zchggf11@hotmail.com
+:C*:/mail1::mohamedkhalil8801@gmail.com
 
-:C*:/ip1:: 
+::/ip:: 
 	GetIP("http://www.netikus.net/show_ip.html")
 Return
 
-:C*:/ip2:: 
+:C*:/ip1:: 
 	send % A_IPAddress2
 Return
 
