@@ -29,14 +29,16 @@ SetCapsLockState, AlwaysOff
 DllCall("Sleep","UInt",1)
 GroupAdd All
 
-Menu Case, Add, &UPPERCASE, CCase
-Menu Case, Add, &lowercase, CCase
-Menu Case, Add, &Title Case, CCase
-Menu Case, Add, &Sentence case, CCase
+Menu Case, Add, &A: UPPERCASE, CCase
+Menu Case, Add, &S: lowercase, CCase
+Menu Case, Add, &D: Title Case, CCase
+Menu Case, Add, &F: Sentence case, CCase
 Menu Case, Add
-Menu Case, Add, &Delete Spaces, CCase
-Menu Case, Add, &Fix Linebreaks, CCase
-Menu Case, Add, &Reverse, CCase
+Menu Case, Add, &G: Delete spaces, CCase
+Menu Case, Add, &H: Replace spaces with underscores, CCase
+Menu Case, Add, &J: Delete underscores, CCase
+Menu Case, Add, &K: Add thousands separator, CCase
+Menu Case, Add, &L: Remove thousands separator, CCase
 
 Active := 0
 OneHanded := 0
@@ -435,6 +437,10 @@ CapsLock up::
 	Active := 0
 return
 
+AddThousandsSeparator(Number,Separator:=","){
+	return RegExReplace(Number,"\G\d+?(?=(\d{3})+(?:\D|$))","$0" Separator)
+}
+
 CCase:
 	If (A_ThisMenuItemPos = 1)
 	   StringUpper, TempText, TempText
@@ -454,15 +460,19 @@ CCase:
 	}
 	Else If (A_ThisMenuItemPos = 7)
 	{
-	   TempText := RegExReplace(TempText, "\R", "`r`n")
+	   TempText := RegExReplace(TempText, "( )", "_")
 	}
 	Else If (A_ThisMenuItemPos = 8)
 	{
-	   Temp2 =
-	   StringReplace, TempText, TempText, `r`n, % Chr(29), All
-	   Loop Parse, TempText
-		  Temp2 := A_LoopField . Temp2
-	   StringReplace, TempText, Temp2, % Chr(29), `r`n, All
+	   TempText := RegExReplace(TempText, "(_)", "")
+	}
+	Else If (A_ThisMenuItemPos = 9)
+	{
+	   TempText := AddThousandsSeparator(TempText, ",")
+	}
+	Else If (A_ThisMenuItemPos = 10)
+	{
+	   TempText := RegExReplace(TempText, ",", "")
 	}
 	PutText(TempText)
 Return
@@ -544,6 +554,101 @@ GetIP(URL){
 	send % http.ResponseText
 }
 
+SelectBlock(start, end) {
+    start_flag := false
+	end_flag := false
+	counter := 0
+	
+	clipSave := ClipboardAll	;save the original clipboard contents
+	
+	if !GetKeyState("Shift")
+		Send, {Home}
+	
+	Loop
+	{	Send,{Ctrl Down}{Shift Down}{Right}{Shift Up}{Ctrl Up}	;highlight a word at a time
+		Clipboard=
+		Send, ^c
+		ClipWait, 5
+		Txt := Clipboard
+		
+		If start = %end%
+		{
+			IfInString, Txt, %start%
+			{
+				counter := counter + 1
+				If counter = 1
+					Send, {Right}
+				else if counter = 2
+					Send,{Ctrl Down}{Shift Down}{Left}{Shift Up}{Ctrl Up}
+			}
+		}
+		else 
+		{
+			If !start_flag 
+			{
+				IfInString, Txt, %start%
+				{
+					start_flag := true
+					Send, {Right}
+				}
+			}
+			
+			If start_flag and !end_flag
+			{
+				IfInString, Txt, %end%
+				{
+					end_flag := true
+					Send,{Ctrl Down}{Shift Down}{Left}{Shift Up}{Ctrl Up}
+				}
+			}
+		}
+		
+		If (start_flag and end_flag) or (counter = 2)
+			Break
+			
+		IfInString, Txt, `n
+		{
+			Send, {Up}
+			break
+		}
+			
+	}
+	Clipboard := clipSave	;restore clipboard contents
+	clipSave=
+}
+
+SelectAllAfter(char) {
+	clipSave := ClipboardAll	;save the original clipboard contents
+	
+	if !GetKeyState("Shift")
+		Send, {Home}
+	
+	Loop
+	{	Send,{Ctrl Down}{Shift Down}{Right}{Shift Up}{Ctrl Up}	;highlight a word at a time
+		Clipboard=
+		Send, ^c
+		ClipWait, 5
+		Txt := Clipboard
+		
+
+		IfInString, Txt, %char%
+		{
+			Send, {Right}{left}
+			Send, ^{Right}
+			Send,{Shift Down}{End}{Shift Up}
+			break
+		}
+		
+		IfInString, Txt, `n
+		{
+			Send, {Up}
+			break
+		}
+	}
+	Clipboard := clipSave	;restore clipboard contents
+	clipSave=
+}
+
 
 ; Hotstrings
 :C*:/datetime1::
@@ -596,3 +701,53 @@ Return
 Return
 
 :C*:/text::Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+
+; Selecting Blocks Hotstrings
+::/"::
+	SelectBlock("""", """")
+Return
+
+::/'::
+	SelectBlock("'", "'")
+Return
+
+::/(::
+::/)::
+	SelectBlock("(", ")")
+Return
+
+::/<::
+::/>::
+	SelectBlock("<", ">")
+Return
+
+::/[::
+::/]::
+	SelectBlock("[", "]")
+Return
+
+::/{::
+::/}::
+	SelectBlock("{", "}")
+Return
+
+::/%::
+	SelectBlock("%", "%")
+Return
+
+::/=::
+	SelectAllAfter("=")
+Return
+
+:C*:/: ::
+	SelectAllAfter(":")
+Return
+
+::/#::
+	SelectAllAfter("#")
+Return
+
+
+; Example test case:
+; xvar = "hello World", ((hello again),: 'fw' <HTML> %var% #123456 [squar] {curly} 1, 2, 3
