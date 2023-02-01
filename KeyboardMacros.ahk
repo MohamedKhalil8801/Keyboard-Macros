@@ -11,6 +11,7 @@ if not A_IsAdmin
 #HotkeyInterval 99000000
 #KeyHistory 0
 #WinActivateForce
+#Persistent
 ListLines Off
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
@@ -42,8 +43,10 @@ Menu Case, Add, &L: Remove thousands separator, CCase
 
 Active := 0
 OneHanded := 0
-active_monitor := 2 ; Control var for toggling between last active windows on each monitor
+active_monitor := 1 ; Control var for toggling between last active windows on each monitor
 i := 0 ; Control var for toggling between Minimize/Maximize/Restore for active window
+border_thickness := 2
+border_duration := 1
 
 Run, powershell.exe -Command "$Process = Get-Process AutoHotKey; $Process.ProcessorAffinity=62", , Hide
 
@@ -66,8 +69,10 @@ RCtrl::
 	Send, {RCtrl Up}{Alt Up}{Tab Up}{`; Up}
 return
 
+; Delete line
 +Backspace::
-	Send {Home}{Shift downtemp}{End}{Right}{ShiftUp}{Del} ; Delete line
+	Send {Home}{Shift downtemp}{End}{Del}
+	Send ^{Del}
 	
 	loop
 	{
@@ -273,8 +278,12 @@ DoubleTap(Key, MaxTime)
 		wTitle = ahk_class Chrome_WidgetWin_1 ahk_exe msedge.exe
 		If WinExist(wTitle)
 			WinActivate
-		else
+		else If WinExist("ahk_exe vivaldi.exe")
 			WinActivate, ahk_exe vivaldi.exe
+		else
+			Run vivaldi.exe
+			
+		DrawBorder(border_duration)
 	return
 		
 	2::	
@@ -282,6 +291,8 @@ DoubleTap(Key, MaxTime)
 			WinActivate
 		else
 			WinActivate, ahk_exe pycharm64.exe
+			
+		DrawBorder(border_duration)
 	return
 	
 	3:: 
@@ -289,22 +300,73 @@ DoubleTap(Key, MaxTime)
 			WinActivate
 		else
 			Run notepad++.exe
+			
+		DrawBorder(border_duration)
 	return
 	
 	4::
-		If WinExist("ahk_exe cmd.exe")
+		If WinExist("ahk_exe Discord.exe")
 			WinActivate
 		else
-			Run cmd.exe
+			Run D:\Apps\Discord.lnk
+			
+		DrawBorder(border_duration)
 	return
 	
-	5:: WinActivate, ahk_exe OneCommander.exe
 	
-	7::
+	5::
+		If WinExist("WhatsApp")
+			WinActivate
+		else
+			Run D:\Apps\WhatsApp.lnk
+			
+		DrawBorder(border_duration)
+	return
+	
+	
+	6::
+		If WinExist("ahk_exe Spotify.exe")
+			WinActivate
+		else
+			Run D:\Apps\Spotify.lnk
+			
+		DrawBorder(border_duration)
+	return
+	
+	7:: 
+		If WinExist("ahk_exe OneCommander.exe")
+			WinActivate
+		else
+			Run D:\Apps\OneCommander3.5.17.0\OneCommander.exe
+			
+		DrawBorder(border_duration)
+	return
+	
+	8::
 		If WinExist("Calculator")
 			WinActivate
 		else
 			Run calc.exe
+			
+		DrawBorder(border_duration)
+	return
+	
+	9::
+		If WinExist("ahk_exe cmd.exe")
+			WinActivate
+		else
+			Run cmd.exe
+			
+		DrawBorder(border_duration)
+	return
+	
+	0::
+		If WinExist("ahk_exe procexp64.exe")
+			WinActivate
+		else
+			Run D:\Apps\ProcessExplorer\procexp64.exe
+			
+		DrawBorder(border_duration)
 	return
 	
 	; Toggle between last active windows on each monitor
@@ -336,10 +398,14 @@ DoubleTap(Key, MaxTime)
 			WinActivate, ahk_id %this_ID%, ,2
 					break
 		}
+		
+		DrawBorder(border_duration)
 	return
 	
 	; Switch active window to the other monitor
 	Enter::
+		DrawBorder(border_duration)
+		
 		MMPrimDPI := 0.9179 ;DPI Scale of the primary monitor (divided by 100).
 		MMSecDPI := 0.8471  ;DPI Scale of the secondary monitor (divided by 100).
 		SysGet, MMCount, MonitorCount
@@ -429,6 +495,8 @@ DoubleTap(Key, MaxTime)
 			WinActivateBottom % Stored	
 			WinRestore % ( Stored, i++ )
 		}
+		
+		DrawBorder(border_duration)
 	Return
 #If
 
@@ -554,6 +622,11 @@ GetIP(URL){
 	send % http.ResponseText
 }
 
+CountOccurrences(sentence, word) {
+	StringReplace, sentence, sentence, %word%, %word%, UseErrorLevel
+	return ErrorLevel
+}
+
 SelectBlock(start, end) {
     start_flag := false
 	end_flag := false
@@ -606,7 +679,7 @@ SelectBlock(start, end) {
 		If (start_flag and end_flag) or (counter = 2)
 			Break
 			
-		IfInString, Txt, `n
+		If CountOccurrences(Txt, "`n") >= 3
 		{
 			Send, {Up}
 			break
@@ -686,11 +759,11 @@ Return
     FormatDateTime("yyyy")
 Return
 
-:C*:/j::jupyter notebook
-::/router::192.168.1.1
-:C*:/router1::192.168.0.1
-::/mail::zchggf11@hotmail.com
-:C*:/mail1::mohamedkhalil8801@gmail.com
+::/j::jupyter notebook
+::/r::192.168.1.1
+:C*:/r1::192.168.0.1
+::/m::zchggf11@hotmail.com
+:C*:/m1::mohamedkhalil8801@gmail.com
 
 ::/ip:: 
 	GetIP("http://www.netikus.net/show_ip.html")
@@ -699,6 +772,11 @@ Return
 :C*:/ip1:: 
 	send % A_IPAddress2
 Return
+
+:C*:-- ::----------
+:C*:__ ::__________
+:C*:** ::**********
+
 
 :C*:/text::Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
@@ -751,3 +829,39 @@ Return
 
 ; Example test case:
 ; xvar = "hello World", ((hello again),: 'fw' <HTML> %var% #123456 [squar] {curly} 1, 2, 3
+; "test text 
+; is 
+; very long"
+
+
+
+DrawRect:
+	WinGetPos, x, y, w, h, A
+	
+	x := x + 10
+	w := w - 20
+	h := h - 10
+	
+	iw := w+border_thickness, ih := h+border_thickness
+	w := w+border_thickness*2, h:= h+border_thickness*2, x := x-border_thickness, y := y-border_thickness
+			
+	Gui, +Lastfound +AlwaysOnTop +Toolwindow -Caption
+	Gui, Color, ffae00
+	
+	WinSet, Region, 0-0 %w%-0 %w%-%h% 0-%h% 0-0 %border_thickness%-%border_thickness% %iw%-%border_thickness% %iw%-%ih% %border_thickness%-%ih% %border_thickness%-%border_thickness%
+	
+	try
+		Gui, Show, w%w% h%h% x%x% y%y% NoActivate, Table awaiting Action
+return
+
+DisableDrawRect:
+	SetTimer, DrawRect, Off
+	SetTimer, DisableDrawRect, Off
+	Gui, Destroy
+return
+
+DrawBorder(duration) {
+	SetTimer, DrawRect, 1
+	duration := duration * 1000
+	SetTimer, DisableDrawRect, %duration%
+}
