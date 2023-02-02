@@ -39,16 +39,16 @@ Menu Case, Add, &G: Delete spaces, CCase
 Menu Case, Add, &H: Replace spaces with underscores, CCase
 Menu Case, Add, &J: Delete underscores, CCase
 Menu Case, Add, &K: Add thousands separator, CCase
-Menu Case, Add, &L: Remove thousands separator, CCase
+Menu Case, Add, &L: Delete thousands separator, CCase
 
 Active := 0
 OneHanded := 0
 active_monitor := 1 ; Control var for toggling between last active windows on each monitor
-i := 0 ; Control var for toggling between Minimize/Maximize/Restore for active window
 border_thickness := 2
 border_duration := 1
 
 Run, powershell.exe -Command "$Process = Get-Process AutoHotKey; $Process.ProcessorAffinity=62", , Hide
+Run, HideMouseAfterInactivity.ahk
 
 AppsKey::Send {Media_Play_Pause}
 AppsKey & R::Reload
@@ -170,21 +170,28 @@ return
 *$SC138::
 	if (DoubleTap("*$SC138", 300))
 	{
-		;Send, {F8}
-		Screen_X := (A_ScreenWidth / 2 - 400)
-		;MsgBox, %Screen_X%x%Screen_Y%
-		MouseMove, %Screen_X%, 50
-		Click Left
-		;SoundSet, 85, Master, VOLUME, 6 ; Setting Mic's volume to 85
+		if WinActive("ahk_exe vivaldi.exe")
+			Send, {F8}
+		else {
+			Screen_X := (A_ScreenWidth / 2 - 400)
+			;MsgBox, %Screen_X%x%Screen_Y%
+			MouseMove, %Screen_X%, 50
+			Click Left
+			;SoundSet, 85, Master, VOLUME, 6 ; Setting Mic's volume to 85
+		}
 	}
 	else
 	{
-		Screen_X := (A_ScreenWidth - 15)
-		Screen_Y := (A_ScreenHeight / 2)
-		;MsgBox, %Screen_X%x%Screen_Y%
-		MouseMove, %Screen_X%, %Screen_Y%
-		Click Left
-		;SoundSet, 85, Master, VOLUME, 6 ; Setting Mic's volume to 85
+		if WinActive("ahk_exe vivaldi.exe")
+			Send, {F9}
+		else {
+			Screen_X := (A_ScreenWidth - 15)
+			Screen_Y := (A_ScreenHeight / 2)
+			;MsgBox, %Screen_X%x%Screen_Y%
+			MouseMove, %Screen_X%, %Screen_Y%
+			Click Left
+			;SoundSet, 85, Master, VOLUME, 6 ; Setting Mic's volume to 85
+		}
 	}	
 return
 
@@ -305,22 +312,23 @@ DoubleTap(Key, MaxTime)
 	return
 	
 	4::
-		If WinExist("ahk_exe Discord.exe")
-			WinActivate
-		else
-			Run D:\Apps\Discord.lnk
-			
-		DrawBorder(border_duration)
-	return
-	
-	
-	5::
 		If WinExist("WhatsApp")
 			WinActivate
 		else
 			Run D:\Apps\WhatsApp.lnk
 			
 		DrawBorder(border_duration)
+	return
+	
+	
+	5::
+		If WinExist("ahk_exe Discord.exe")
+			WinActivate
+		else
+			Run D:\Apps\Discord.lnk
+			
+		DrawBorder(border_duration)
+		
 	return
 	
 	
@@ -413,6 +421,10 @@ DoubleTap(Key, MaxTime)
 		SysGet, MMPrimLRTB, Monitor, MMPrimary
 		WinGetPos, MMWinGetX, MMWinGetY, MMWinGetWidth, MMWinGetHeight, A
 		MMDPISub := Abs(MMPrimDPI - MMSecDPI) + 1
+		
+		MMWinGetX := MMWinGetX + 2
+		MMWinGetY := MMWinGetY + 2
+		
 		;Second mon is off, window is lost, bring to primary
 		if ( (MMCount = 1) and !((MMWinGetX > MMPrimLRTBLeft + 20) and (MMWinGetX < MMPrimLRTBRight - 20) and (MMWinGetY > MMPrimLRTBTop + 20) and (MMWinGetY < MMPrimLRTBBottom - 20)) ){
 			if ((MMPrimDPI - MMSecDPI) >= 0)
@@ -431,8 +443,25 @@ DoubleTap(Key, MaxTime)
 			SysGet, MMSecLRTB, Monitor, 1
 		MMSecW := MMSecLRTBRight - MMSecLRTBLeft
 		MMSecH := MMSecLRTBBottom - MMSecLRTBTop
+		
+		/*
+		a := (MMWinGetX > MMPrimLRTBLeft - 20)
+		b := (MMWinGetX < MMPrimLRTBRight + 20)
+		c := (MMWinGetY > MMPrimLRTBTop - 20)
+		d := (MMWinGetY < MMPrimLRTBBottom + 20)
+		
+		e := (MMWinGetX > MMSecLRTBLeft - 20)
+		f := (MMWinGetX < MMSecLRTBRight + 20)
+		g := (MMWinGetY > MMSecLRTBTop - 20)
+		h := (MMWinGetY < (MMSecLRTBBottom + 20))
+		
+		MsgBox, Primary Conditions:`n (%MMWinGetX% %MMPrimLRTBLeft%): %a% `n (%MMWinGetX% %MMPrimLRTBRight%): %b% `n (%MMWinGetY% %MMPrimLRTBTop%): %c% `n (%MMWinGetY% %MMPrimLRTBBottom%): %d%
+		MsgBox, Secondary Conditions:`n (%MMWinGetX% %MMSecLRTBLeft%): %e% `n (%MMWinGetX% %MMSecLRTBRight%): %f% `n (%MMWinGetY% %MMSecLRTBTop%): %g% `n (%MMWinGetY% %MMSecLRTBBottom%): %h%
+		*/
+		
 		;Primary to secondary
-		if ( (MMWinGetX > MMPrimLRTBLeft - 20) and (MMWinGetX < MMPrimLRTBRight + 20) and (MMWinGetY > MMPrimLRTBTop - 20) and (MMWinGetY < MMPrimLRTBBottom + 20) ){
+		if ( (MMWinGetX > MMPrimLRTBLeft - 20) and (MMWinGetX < MMPrimLRTBRight - 8) and (MMWinGetY > MMPrimLRTBTop - 20) and (MMWinGetY < MMPrimLRTBBottom + 20) ){
+			;MsgBox, Primary to secondary
 			if ( (MMSecW) and (MMSecH) ){ ;Checks if sec mon exists. Could have used MMCount instead: if (MMCount >= 2){}
 				if ((MMSecDPI - MMPrimDPI) >= 0){
 					MMWidthRatio := (MMSecW / A_ScreenWidth) / MMDPISub
@@ -453,6 +482,7 @@ DoubleTap(Key, MaxTime)
 			}
 		} ;Secondary to primary
 		Else if ( (MMWinGetX > MMSecLRTBLeft - 20) and (MMWinGetX < MMSecLRTBRight + 20) and (MMWinGetY > MMSecLRTBTop - 20) and (MMWinGetY < MMSecLRTBBottom + 20) ){
+			;MsgBox, Secondary to primary
 			if ( (MMSecW) and (MMSecH) ){
 				if ((MMPrimDPI - MMSecDPI) >= 0){
 					MMWidthRatio := (A_ScreenWidth / MMSecW) / MMDPISub
@@ -479,21 +509,30 @@ DoubleTap(Key, MaxTime)
 		}
 	return
 	
+	
 	; Toggle between Minimize/Maximize/Restore for active window
 	\::
 		WinGetActiveTitle, WinTitle
-		if ( Mod( i, 3 ) = 0 )
+		WinGet,WinState,MinMax, %WinTitle%
+		
+		
+		if GetKeyState("Space", "P")
+		{
+			;WinMinimize % ( Stored := WinTitle, i++ )
+			WinMinimize % ( WinTitle, i++ )
+			return
+		}
+		
+		If (WinState = -1) or (WinState = 0)
 		{
 			WinMaximize % ( WinTitle, i++ )
 		}
-		else if ( Mod( i, 3 ) = 1 )
+		else If WinState = 1
 		{
-			WinMinimize % ( Stored := WinTitle, i++ )
-		}
-		else if ( Mod( i, 3 ) = 2 )
-		{
-			WinActivateBottom % Stored	
-			WinRestore % ( Stored, i++ )
+			;WinActivateBottom % Stored	
+			;WinRestore % ( Stored, i++ )
+			WinActivateBottom % WinTitle	
+			WinRestore % ( WinTitle, i++ )
 		}
 		
 		DrawBorder(border_duration)
@@ -727,17 +766,16 @@ SelectAllAfter(char) {
 :C*:/datetime1::
     FormatDateTime("dddd, MMMM dd, yyyy, HH:mm")
 Return
-
-:C*:/datetime::
+::/datetime::
     FormatDateTime("dddd, MMMM dd, yyyy hh:mm tt")
 Return
 :C*:/time1::
     FormatDateTime("HH:mm")
 Return
-:C*:/time::
+::/time::
     FormatDateTime("hh:mm tt")
 Return
-::/date:: January 30, 2023
+::/date::
     FormatDateTime("MMMM dd, yyyy")
 Return
 :C*:/date1::
@@ -780,7 +818,7 @@ Return
 
 :C*:/text::Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
-
+; \*\*\*\*\*\*\*\*\*\*
 ; Selecting Blocks Hotstrings
 ::/"::
 	SelectBlock("""", """")
