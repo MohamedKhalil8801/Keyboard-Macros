@@ -1,4 +1,4 @@
-# Keyboard Shortcuts
+# Keyboard Macros
 ###### Note: DT () = double tab. I. E., double press the button between the parenthesis.
 ## Navigation Keys (Hold Caps Lock with these)
 #### All navigation keys can be combined with Space for word selection
