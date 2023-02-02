@@ -4,6 +4,8 @@ Last_Move := A_TickCount
 State := True
 HideMouseAfterSeconds := 10
 
+^!F12::RestoreCursor()
+
 Loop
 {
 	MouseGetPos, Mouse_X, Mouse_Y

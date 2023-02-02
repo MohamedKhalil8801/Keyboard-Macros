@@ -43,7 +43,7 @@
 | Key                      | Macro                                  | Description                                    |
 | ------------------------ | -------------------------------------- | ---------------------------------------------- |
 | <kbd> Shift </kbd> + <kbd> Backspace </kbd>        | <kbd> Home </kbd> + <kbd> Shift </kbd> + <kbd> End </kbd> + <kbd> Del </kbd> -> <kbd> Ctrl </kbd> + <kbd> Del </kbd> | Delete current line                            |
-| <kbd> Ctrl </kbd> + <kbd> Backspace </kbd>         | Enabled by default in windows          | Delete all previous characters in a single word |
+| <kbd> Ctrl </kbd> + <kbd> Backspace </kbd>         | Default windows hotkey         | Delete all previous characters in a single word |
 | <kbd> Caps </kbd> + <kbd> Backspace </kbd>         | <kbd> Del </kbd>                                    | Delete key                                     |
 | <kbd> Caps </kbd> + <kbd> Space </kbd> + <kbd> Backspace </kbd> | <kbd> Ctrl </kbd> + <kbd> Shift </kbd> + <kbd> Right </kbd> + <kbd> Backspace </kbd>       | Delete all next characters in a single word     |                              |
 
@@ -134,3 +134,15 @@
 | DT (<kbd> LShift </kbd>)               | Cycle keyboard input languages             |
 | DT (<kbd> RShift </kbd>)               | Open emoji panel                     |
 | DT (<kbd> LCtrl </kbd>)                | Enable one-handed mode               |
+
+
+# Hide mouse after inactivity
+## Hide the mouse after x seconds of inactivity
+
+| Variable              | Description                                |
+| --------------------- | ------------------------------------------ |
+| HideMouseAfterSeconds | Time of inactivity before hiding the mouse | 
+
+| Key              | Description                                |
+| --------------------- | ------------------------------------------ |
+| <kbd> Ctrl </kbd> + <kbd> Alt </kbd> + <kbd> F12 </kbd> | Show the mouse incase something wrong happens | 

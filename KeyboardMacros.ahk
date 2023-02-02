@@ -379,10 +379,17 @@ DoubleTap(Key, MaxTime)
 	
 	; Toggle between last active windows on each monitor
 	RShift::
+		
 		if (active_monitor = 1)
 			active_monitor := 2
 		else if (active_monitor = 2)
 			active_monitor := 1
+		
+		If GetMonitor() = 1
+			active_monitor := 2
+		else
+			active_monitor := 1
+			
 		;MsgBox % active_monitor
 		SysGet, Mon, Monitor, %active_monitor%
 		;MsgBox, %active_monitor%: Left: %MonLeft% -- Top: %MonTop% -- Right: %MonRight% -- Bottom %MonBottom%
@@ -543,6 +550,32 @@ CapsLock up::
 	send {Shift up}{Ctrl up}{Alt up}{SPACE up}
 	Active := 0
 return
+
+GetMonitor(hwnd := 0) {
+; If no hwnd is provided, use the Active Window
+	if (hwnd)
+		WinGetPos, winX, winY, winW, winH, ahk_id %hwnd%
+	else
+		WinGetActiveStats, winTitle, winW, winH, winX, winY
+
+	SysGet, numDisplays, MonitorCount
+	SysGet, idxPrimary, MonitorPrimary
+
+	Loop %numDisplays%
+	{	SysGet, mon, MonitorWorkArea, %a_index%
+	; Left may be skewed on Monitors past 1
+		if (a_index > 1)
+			monLeft -= 10
+	; Right overlaps Left on Monitors past 1
+		else if (numDisplays > 1)
+			monRight -= 10
+	; Tracked based on X. Cannot properly sense on Windows "between" monitors
+		if (winX >= monLeft && winX < monRight)
+			return %a_index%
+	}
+; Return Primary Monitor if can't sense
+	return idxPrimary
+}
 
 AddThousandsSeparator(Number,Separator:=","){
 	return RegExReplace(Number,"\G\d+?(?=(\d{3})+(?:\D|$))","$0" Separator)
