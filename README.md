@@ -16,8 +16,7 @@
 | <kbd> H </kbd>      | <kbd> Ctrl </kbd> + <kbd> Left </kbd>  | for jumping one word to the left             |
 | DT (<kbd> H </kbd>) | <kbd> Home </kbd>                      | for jumping to the beginning of the sentence |
 | <kbd> ; </kbd>      | <kbd> Ctrl </kbd> + <kbd> Right </kbd> | for jumping one word to the right            |
-| DT (<kbd> ; </kbd>) | <kbd> End </kbd>                       | for jumping to the end of the sentence       |
-|                     |                                        |                                              |
+| DT (<kbd> ; </kbd>) | <kbd> End </kbd>                       | for jumping to the end of the sentence       |                      |
 
 ## Browser controls (Hold Caps Lock with these)
 | Key       | Macro              | Description                               |
@@ -34,7 +33,6 @@
 | DT (<kbd> RAlt </kbd>) | <kbd> F8 </kbd>                 | Focus on browser's address bar            |
 | <kbd> / </kbd>         |                    | Google selected text with default browser |
 
-
 ## Other browser controls (You DON'T need to hold Caps Lock with these)
 | Key                    | Macro           | Description                    |
 | ---------------------- | --------------- | ------------------------------ |
@@ -45,10 +43,9 @@
 | Key                      | Macro                                  | Description                                    |
 | ------------------------ | -------------------------------------- | ---------------------------------------------- |
 | <kbd> Shift </kbd> + <kbd> Backspace </kbd>        | <kbd> Home </kbd> + <kbd> Shift </kbd> + <kbd> End </kbd> + <kbd> Del </kbd> -> <kbd> Ctrl </kbd> + <kbd> Del </kbd> | Delete current line                            |
-| <kbd> Ctrl </kbd> + <kbd> Backspace </kbd>         | Enabled by default in windows          | Delete all previous character in a single word |
+| <kbd> Ctrl </kbd> + <kbd> Backspace </kbd>         | Enabled by default in windows          | Delete all previous characters in a single word |
 | <kbd> Caps </kbd> + <kbd> Backspace </kbd>         | <kbd> Del </kbd>                                    | Delete key                                     |
-| <kbd> Caps </kbd> + <kbd> Space </kbd> + <kbd> Backspace </kbd> | <kbd> Ctrl </kbd> + <kbd> Shift </kbd> + <kbd> Right </kbd> + <kbd> Backspace </kbd>       | Delete all next character in a single word     |
-|                          |                                        |                                                |
+| <kbd> Caps </kbd> + <kbd> Space </kbd> + <kbd> Backspace </kbd> | <kbd> Ctrl </kbd> + <kbd> Shift </kbd> + <kbd> Right </kbd> + <kbd> Backspace </kbd>       | Delete all next characters in a single word     |                              |
 
 ## Switching Apps (Hold Caps Lock with these)
 | Key            | Description                                                            |
@@ -63,7 +60,6 @@
 | <kbd> 8 </kbd> | Activate Calculator, if it's not open, then start it                   |
 | <kbd> 9 </kbd> | Activate CMD, if it's not open, then start it                          |
 | <kbd> 0 </kbd> | Activate ProcessExplorer, if it's not open, then start it              |
-
 
 ## Window Controls (Hold Caps Lock with these)
 | Key                                 | Description                                                   |
@@ -86,7 +82,6 @@
 | <kbd> U </kbd> -> <kbd> J </kbd> | Delete underscores              |
 | <kbd> U </kbd> -> <kbd> K </kbd> | Add thousands separator         |
 | <kbd> U </kbd> -> <kbd> L </kbd> | Delete thousands separator      |
-|        |                                 |
 
 ## General Hotstrings
 | Key                     | Example                               |
@@ -112,8 +107,6 @@
 | <kbd> -- </kbd>         | ----------                            |
 | <kbd> __ </kbd>         | \_\_\_\_\_\_\_\_\_\_                  |
 | <kbd> ** </kbd>         | \*\*\*\*\*\*\*\*\*\*                  |
-|                         |                                       |
-
 
 ## Hotstrings for selecting text blocks
 #### All these hotstrings can be combined with Shift to start searching from cursor position, rather than the beginning of the sentence
@@ -141,5 +134,3 @@
 | DT (<kbd> LShift </kbd>)               | Cycle keyboard input languages             |
 | DT (<kbd> RShift </kbd>)               | Open emoji panel                     |
 | DT (<kbd> LCtrl </kbd>)                | Enable one-handed mode               |
-
-
