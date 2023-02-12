@@ -9,7 +9,7 @@
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 #MaxHotkeysPerInterval 99000000
 #HotkeyInterval 99000000
-#KeyHistory 0
+; #KeyHistory 0
 ListLines Off
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
@@ -20,18 +20,18 @@ SetControlDelay, -1
 SetBatchLines, -1
 
 navigation_master_char := ";"
+navigation_language_code := 1033 ; 1033 is US English langauge code
+log := False
 
 last_hotstring := ""
 last_substr := ""
 substr_occurrence := 1
 is_block := False
 
-; counter := 0
-
 RegExHotstrings(k, a = "", Options:="") {
     static z, m = "~$", m_ = "*~$", s, t, w = 2000, sd, d = "Left,Right,Up,Down,Home,End,RButton,LButton", f = "!,+,^,#", f_="{,}"
     global $
-	global navigation_master_char, last_hotstring ;, counter
+	global navigation_master_char, last_hotstring, navigation_language_code
 
     If z = ; init
     {
@@ -65,7 +65,11 @@ RegExHotstrings(k, a = "", Options:="") {
             s =
         Else
         {
-            If q = Shift
+            If (GetKeyboardLanguage(WinActive("A")) != navigation_language_code) ; language is not English
+                Return
+            Else If GetKeyState("CapsLock", "P")
+                Return
+            Else If q = Shift
             return
             Else If q = Space
                 q := " "
@@ -73,8 +77,6 @@ RegExHotstrings(k, a = "", Options:="") {
                 q := "`t"
             Else If q in Enter,Return,NumpadEnter
                 q := "`n"
-            Else If GetKeyState("CapsLock", "P")
-                Return
             Else If (RegExMatch(q, "Numpad(.+)", n))
             {
                 q := n1 == "Div" ? "/" : n1 == "Mult" ? "*" : n1 == "Add" ? "+" : n1 == "Sub" ? "-" : n1 == "Dot" ? sd : ""
@@ -92,7 +94,7 @@ RegExHotstrings(k, a = "", Options:="") {
             {
 				; temp := RegExReplace(s, "^.*?(?=/)")
 
-				Needle := "[^" . navigation_master_char . "]+$"       ;Match all characters that are not a "/" starting from the end of the haystack
+				Needle := "[^" . navigation_master_char . "]+$"       ;Match all characters that are not 'navigation_master_char' starting from the end of the haystack
 				RegExMatch(s, Needle, temp)
 
                 StringLen, l, $
@@ -117,7 +119,7 @@ RegExHotstrings(k, a = "", Options:="") {
             }
         }
          If (StrLen(s) > w)
-            StringTrimLeft, s, s, w // 2
+            StringTrimLeft, s, s, w ; 2
     }
     Else ; assert
     {
@@ -132,9 +134,7 @@ RegExHotstrings(k, a = "", Options:="") {
         If a !=
             t = %t%`n%k%`r%a%`r%Options%
     }
-    ; counter += 1
-
-    ; ToolTip, %counter%, 500, 200, 
+    
     Return
     __hs: ; event
     RegExHotstrings("", "", Options)
@@ -287,11 +287,11 @@ RestoreClipboard() {
 	clipSave=
 }
 
-
-RegExHotstrings(navigation_master_char . "(.)+( )", "FindInLine") 
+; navigation_master_char . "([A-Za-z0-9,.=:#%""''\(\)<>\[\]\{\}])+( )", "FindInLine"
+RegExHotstrings(navigation_master_char . "([^\s])+( )", "FindInLine") 
 
 FindInLine:
-	global from_start, reverse
+	global from_start, reverse, log
 
 	; keys := StrReplace(RTrim(last_hotstring, " "), "/", "")
 	keys := Trim(last_hotstring)
@@ -300,7 +300,8 @@ FindInLine:
 		Return
 	}
 	
-	; Log(keys)
+    If (log)
+	    Log(keys)
 
 	switch keys
 	{
@@ -436,3 +437,14 @@ return
 		Goto, FindInLine
 	return
 #If
+
+GetKeyboardLanguage(_hWnd=0){
+    if !_hWnd
+        ThreadId=0
+    else
+        if !ThreadId := DllCall("user32.dll\GetWindowThreadProcessId", "Ptr", _hWnd, "UInt", 0, "UInt")
+            return false    
+    if !KBLayout := DllCall("user32.dll\GetKeyboardLayout", "UInt", ThreadId, "UInt")
+        return false    
+    return KBLayout & 0xFFFF
+}
