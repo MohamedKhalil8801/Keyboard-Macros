@@ -49,6 +49,9 @@ border_duration := 1
 
 Run, powershell.exe -Command "$Process = Get-Process AutoHotKey; $Process.ProcessorAffinity=62", , Hide
 Run, HideMouseAfterInactivity.ahk
+Run, Hotstrings.ahk
+
+OnExit("ExitFunc")
 
 AppsKey::Send {Media_Play_Pause}
 AppsKey & R::Reload
@@ -182,16 +185,16 @@ return
 	}
 	else
 	{
-		if WinActive("ahk_exe vivaldi.exe")
-			Send, {F9}
-		else {
+		;if WinActive("ahk_exe vivaldi.exe")
+		;	Send, {F9}
+		;else {
 			Screen_X := (A_ScreenWidth - 15)
 			Screen_Y := (A_ScreenHeight / 2)
 			;MsgBox, %Screen_X%x%Screen_Y%
 			MouseMove, %Screen_X%, %Screen_Y%
 			Click Left
 			;SoundSet, 85, Master, VOLUME, 6 ; Setting Mic's volume to 85
-		}
+		;}
 	}	
 return
 
@@ -199,6 +202,7 @@ DoubleTap(Key, MaxTime)
 {
 	return (A_PriorHotKey == Key AND A_TimeSincePriorHotkey < MaxTime  AND A_TimeSincePriorHotkey > 100) == 1
 }
+
 
 #If (GetKeyState("CapsLock", "P") or (OneHanded == 1))
 	Active := 1
@@ -225,18 +229,11 @@ DoubleTap(Key, MaxTime)
 	return
 	
 	; jump keys
-	h::
-		if (DoubleTap("h", 200))
-			Send, {home}
-		else
-			Send, ^{left}
-	return
-	`;::
-		if (DoubleTap("`;", 200))
-			Send, {end}
-		else
-			Send, ^{Right}
-	return
+	h::Send, ^{left}
+	`;::Send, ^{Right}
+
+	u::Send, {Home}
+	p::Send, {End}
 	
 	; Browser controls
 	a::Send ^+{Tab}
@@ -269,16 +266,17 @@ DoubleTap(Key, MaxTime)
 	SPACE & `;::Send, +^{Right}
 	SPACE & o::Send, +{home}
 	SPACE & m::Send, +{end}
+	SPACE & u::Send, +{home}
+	SPACE & p::Send, +{end}
 	
-	x::!F4
+	x::WinClose A
 	
-	 
-	u::
+	
+	y::
 		GetText(TempText)
 		If NOT ERRORLEVEL
 		   Menu Case, Show
 	Return
-	
 	
 	; Switching apps
 	1::
@@ -296,8 +294,10 @@ DoubleTap(Key, MaxTime)
 	2::	
 		If WinExist("ahk_exe code.exe")
 			WinActivate
-		else
+		else if WinExist("ahk_exe pycharm64.exe")
 			WinActivate, ahk_exe pycharm64.exe
+		else 
+			Run C:\Users\Mohammed Khalid\AppData\Local\Programs\Microsoft VS Code\Code.exe
 			
 		DrawBorder(border_duration)
 	return
@@ -342,10 +342,10 @@ DoubleTap(Key, MaxTime)
 	return
 	
 	7:: 
-		If WinExist("ahk_exe OneCommander.exe")
+		If WinExist("ahk_exe MultiCommander.exe")
 			WinActivate
 		else
-			Run D:\Apps\OneCommander3.5.17.0\OneCommander.exe
+			Run D:\Apps\MultiCommander (x64).lnk
 			
 		DrawBorder(border_duration)
 	return
@@ -416,7 +416,7 @@ DoubleTap(Key, MaxTime)
 		
 		DrawBorder(border_duration)
 	return
-	
+
 	; Switch active window to the other monitor
 	Enter::
 		DrawBorder(border_duration)
@@ -669,243 +669,6 @@ IsWindow(hWnd){
     return true
 }
 
-
-; ; == HOT STRINGS ==
-
-; ; Current date and time
-FormatDateTime(format, datetime="") {
-    if (datetime = "") {
-        datetime := A_Now
-    }
-    FormatTime, CurrentDateTime, %datetime%, %format%
-    SendInput, %CurrentDateTime%
-    return
-}
-
-GetIP(URL){
-	http:=ComObjCreate("WinHttp.WinHttpRequest.5.1")
-	http.Open("GET",URL,1)
-	http.Send()
-	http.WaitForResponse
-	If (http.ResponseText="Error"){
-		MsgBox 16, IP Address, Sorry, your public IP address could not be detected
-		Return
-	}
-	send % http.ResponseText
-}
-
-CountOccurrences(sentence, word) {
-	StringReplace, sentence, sentence, %word%, %word%, UseErrorLevel
-	return ErrorLevel
-}
-
-SelectBlock(start, end) {
-    start_flag := false
-	end_flag := false
-	counter := 0
-	
-	clipSave := ClipboardAll	;save the original clipboard contents
-	
-	if !GetKeyState("Shift")
-		Send, {Home}
-	
-	Loop
-	{	Send,{Ctrl Down}{Shift Down}{Right}{Shift Up}{Ctrl Up}	;highlight a word at a time
-		Clipboard=
-		Send, ^c
-		ClipWait, 5
-		Txt := Clipboard
-		
-		If start = %end%
-		{
-			IfInString, Txt, %start%
-			{
-				counter := counter + 1
-				If counter = 1
-					Send, {Right}
-				else if counter = 2
-					Send,{Ctrl Down}{Shift Down}{Left}{Shift Up}{Ctrl Up}
-			}
-		}
-		else 
-		{
-			If !start_flag 
-			{
-				IfInString, Txt, %start%
-				{
-					start_flag := true
-					Send, {Right}
-				}
-			}
-			
-			If start_flag and !end_flag
-			{
-				IfInString, Txt, %end%
-				{
-					end_flag := true
-					Send,{Ctrl Down}{Shift Down}{Left}{Shift Up}{Ctrl Up}
-				}
-			}
-		}
-		
-		If (start_flag and end_flag) or (counter = 2)
-			Break
-			
-		If CountOccurrences(Txt, "`n") >= 3
-		{
-			Send, {Up}
-			break
-		}
-			
-	}
-	Clipboard := clipSave	;restore clipboard contents
-	clipSave=
-}
-
-SelectAllAfter(char) {
-	clipSave := ClipboardAll	;save the original clipboard contents
-	
-	if !GetKeyState("Shift")
-		Send, {Home}
-	
-	Loop
-	{	Send,{Ctrl Down}{Shift Down}{Right}{Shift Up}{Ctrl Up}	;highlight a word at a time
-		Clipboard=
-		Send, ^c
-		ClipWait, 5
-		Txt := Clipboard
-		
-
-		IfInString, Txt, %char%
-		{
-			Send, {Right}{left}
-			Send, ^{Right}
-			Send,{Shift Down}{End}{Shift Up}
-			break
-		}
-		
-		IfInString, Txt, `n
-		{
-			Send, {Up}
-			break
-		}
-	}
-	Clipboard := clipSave	;restore clipboard contents
-	clipSave=
-}
-
-
-; Hotstrings
-:C*:/datetime1::
-    FormatDateTime("dddd, MMMM dd, yyyy, HH:mm")
-Return
-::/datetime::
-    FormatDateTime("dddd, MMMM dd, yyyy hh:mm tt")
-Return
-:C*:/time1::
-    FormatDateTime("HH:mm")
-Return
-::/time::
-    FormatDateTime("hh:mm tt")
-Return
-::/date::
-    FormatDateTime("MMMM dd, yyyy")
-Return
-:C*:/date1::
-    FormatDateTime("MM/dd/yyyy")
-Return
-::/day::
-    FormatDateTime("dddd")
-Return
-:C*:/day1::
-    FormatDateTime("dd")
-Return
-::/month::
-    FormatDateTime("MMMM")
-Return
-:C*:/month1::
-    FormatDateTime("MM")
-Return
-:C*:/year::
-    FormatDateTime("yyyy")
-Return
-
-::/j::jupyter notebook
-::/r::192.168.1.1
-:C*:/r1::192.168.0.1
-::/m::zchggf11@hotmail.com
-:C*:/m1::mohamedkhalil8801@gmail.com
-
-::/ip:: 
-	GetIP("http://www.netikus.net/show_ip.html")
-Return
-
-:C*:/ip1:: 
-	send % A_IPAddress2
-Return
-
-:C*:-- ::----------
-:C*:__ ::__________
-:C*:** ::**********
-
-
-:C*:/text::Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-; \*\*\*\*\*\*\*\*\*\*
-; Selecting Blocks Hotstrings
-::/"::
-	SelectBlock("""", """")
-Return
-
-::/'::
-	SelectBlock("'", "'")
-Return
-
-::/(::
-::/)::
-	SelectBlock("(", ")")
-Return
-
-::/<::
-::/>::
-	SelectBlock("<", ">")
-Return
-
-::/[::
-::/]::
-	SelectBlock("[", "]")
-Return
-
-::/{::
-::/}::
-	SelectBlock("{", "}")
-Return
-
-::/%::
-	SelectBlock("%", "%")
-Return
-
-::/=::
-	SelectAllAfter("=")
-Return
-
-:C*:/: ::
-	SelectAllAfter(":")
-Return
-
-::/#::
-	SelectAllAfter("#")
-Return
-
-
-; Example test case:
-; xvar = "hello World", ((hello again),: 'fw' <HTML> %var% #123456 [squar] {curly} 1, 2, 3
-; "test text 
-; is 
-; very long"
-
-
-
 DrawRect:
 	WinGetPos, x, y, w, h, A
 	
@@ -935,4 +698,14 @@ DrawBorder(duration) {
 	SetTimer, DrawRect, 1
 	duration := duration * 1000
 	SetTimer, DisableDrawRect, %duration%
+}
+
+ExitFunc(ExitReason, ExitCode)
+{
+	If (ExitReason != "Reload") {
+		Run taskkill /f /im autohotkey.exe,, hide
+		Run taskkill /f /im AutoHotkeyU64.exe,, hide
+		Run taskkill /f /im AutoHotkeyA32.exe,, hide
+		Run taskkill /f /im AutoHotkeyU32.exe,, hide
+	}
 }
