@@ -48,7 +48,7 @@ border_thickness := 2
 border_duration := 1
 
 Run, powershell.exe -Command "$Process = Get-Process AutoHotKey; $Process.ProcessorAffinity=62", , Hide
-Run, HideMouseAfterInactivity.ahk
+; Run, HideMouseAfterInactivity.ahk
 Run, Hotstrings.ahk
 
 OnExit("ExitFunc")
@@ -91,10 +91,7 @@ return
 	
 ^SPACE::  Winset, Alwaysontop, , A ; Set window to Always on top
 
-GetKeyboardLayout(ByRef window)
-{
-    return DllCall("GetKeyboardLayout", "UInt", DllCall("GetWindowThreadProcessId", "Int", WinExist(window), "Int", 0), "UShort")
-}
+
 SetDefaultKeyboard(LocaleID){
 	Global
 	SPI_SETDEFAULTINPUTLANG := 0x005A

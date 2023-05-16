@@ -20,13 +20,14 @@ SetControlDelay, -1
 SetBatchLines, -1
 
 navigation_master_char := ";"
-navigation_language_code := 1033 ; 1033 is US English langauge code
-log := False
+navigation_language_code := "0x4090409" ; 0x4090409 is US English langauge code
+log := True
 
 last_hotstring := ""
 last_substr := ""
 substr_occurrence := 1
 is_block := False
+
 
 RegExHotstrings(k, a = "", Options:="") {
     static z, m = "~$", m_ = "*~$", s, t, w = 2000, sd, d = "Left,Right,Up,Down,Home,End,RButton,LButton", f = "!,+,^,#", f_="{,}"
@@ -65,7 +66,8 @@ RegExHotstrings(k, a = "", Options:="") {
             s =
         Else
         {
-            If (GetKeyboardLanguage(WinActive("A")) != navigation_language_code) ; language is not English
+			lang := GetKeyboardLayout()
+            If (lang != navigation_language_code) ; language is not English
                 Return
             Else If GetKeyState("CapsLock", "P")
                 Return
@@ -102,6 +104,7 @@ RegExHotstrings(k, a = "", Options:="") {
                 if !(x3~="i)\bNB\b")        ; if No Backspce "NB"
                     SendInput, {BS %l%}
                 If (IsLabel(x2)) {
+					Log("__________" . lang)
 					last_hotstring := temp
                     Gosub, %x2%
 				}
@@ -438,13 +441,10 @@ return
 	return
 #If
 
-GetKeyboardLanguage(_hWnd=0){
-    if !_hWnd
-        ThreadId=0
-    else
-        if !ThreadId := DllCall("user32.dll\GetWindowThreadProcessId", "Ptr", _hWnd, "UInt", 0, "UInt")
-            return false    
-    if !KBLayout := DllCall("user32.dll\GetKeyboardLayout", "UInt", ThreadId, "UInt")
-        return false    
-    return KBLayout & 0xFFFF
+GetKeyboardLayout() {
+	ControlGetFocus Focused, A
+	ControlGet CtrlID, Hwnd,, % Focused, A
+	ThreadID := DllCall("GetWindowThreadProcessId", "Ptr", CtrlID, "Ptr", 0)
+	InputLocaleID := DllCall("GetKeyboardLayout", "UInt", ThreadID, "Ptr")
+	Return % Format("0x{:X}",InputLocaleID)
 }
