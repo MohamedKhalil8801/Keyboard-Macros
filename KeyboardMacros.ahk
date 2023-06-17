@@ -37,9 +37,11 @@ Menu Case, Add, &F: Sentence case, CCase
 Menu Case, Add
 Menu Case, Add, &G: Delete spaces, CCase
 Menu Case, Add, &H: Replace spaces with underscores, CCase
-Menu Case, Add, &J: Delete underscores, CCase
+Menu Case, Add, &J: Replace underscores with spaces, CCase
 Menu Case, Add, &K: Add thousands separator, CCase
 Menu Case, Add, &L: Delete thousands separator, CCase
+Menu Case, Add, &Y: Replace spaces with dashes, CCase
+Menu Case, Add, &U: Replace dashes with spaces, CCase
 
 Active := 0
 OneHanded := 0
@@ -200,7 +202,6 @@ DoubleTap(Key, MaxTime)
 	return (A_PriorHotKey == Key AND A_TimeSincePriorHotkey < MaxTime  AND A_TimeSincePriorHotkey > 100) == 1
 }
 
-
 #If (GetKeyState("CapsLock", "P") or (OneHanded == 1))
 	Active := 1
 	
@@ -255,6 +256,30 @@ DoubleTap(Key, MaxTime)
 
 	
 	; Select mode
+	SPACE & w::
+		WinGetTitle, Title, A
+		WinSet, ExStyle, ^0x80, %Title%
+		Send {LWin down}{Ctrl down}{Left}{Ctrl up}{LWin up}
+		sleep, 50
+		WinSet, ExStyle, ^0x80, %Title%
+		WinActivate, %Title%
+		ToolTip 1, A_ScreenWidth/2, A_ScreenHeight/6 ; Show initial tooltip
+		SetTimer, HideToolTip, 1000 ; Hide after 0.5 second
+	Return
+	SPACE & s::
+		WinGetTitle, Title, A
+		WinSet, ExStyle, ^0x80, %Title%
+		Send {LWin down}{Ctrl down}{Right}{Ctrl up}{LWin up}
+		sleep, 50
+		WinSet, ExStyle, ^0x80, %Title%
+		WinActivate, %Title%
+		ToolTip 2, A_ScreenWidth/2, A_ScreenHeight/6 ; Show initial tooltip
+		SetTimer, HideToolTip, 1000 ; Hide after 0.5 second
+	Return
+	SPACE & t::#^d
+	SPACE & a::^#Left
+	SPACE & q::^#F4
+	SPACE & d::^#Right
 	SPACE & i::+up
 	SPACE & j::+left
 	SPACE & k::+down
@@ -265,6 +290,16 @@ DoubleTap(Key, MaxTime)
 	SPACE & m::Send, +{end}
 	SPACE & u::Send, +{home}
 	SPACE & p::Send, +{end}
+
+	SPACE & 1::#1
+	SPACE & 2::#2
+	SPACE & 3::#3
+	SPACE & 4::#4
+	SPACE & 5::#5
+	SPACE & 6::#6
+	SPACE & 7::#7
+	SPACE & 8::#8
+	SPACE & 9::#9
 	
 	x::WinClose A
 	
@@ -601,7 +636,7 @@ CCase:
 	}
 	Else If (A_ThisMenuItemPos = 8)
 	{
-	   TempText := RegExReplace(TempText, "(_)", "")
+	   TempText := RegExReplace(TempText, "(_)", " ")
 	}
 	Else If (A_ThisMenuItemPos = 9)
 	{
@@ -610,6 +645,14 @@ CCase:
 	Else If (A_ThisMenuItemPos = 10)
 	{
 	   TempText := RegExReplace(TempText, ",", "")
+	}
+	Else If (A_ThisMenuItemPos = 11)
+	{
+	   TempText := RegExReplace(TempText, "( )", "-")
+	}
+	Else If (A_ThisMenuItemPos = 12)
+	{
+	   TempText := RegExReplace(TempText, "(-)", " ")
 	}
 	PutText(TempText)
 Return
@@ -696,6 +739,10 @@ DrawBorder(duration) {
 	duration := duration * 1000
 	SetTimer, DisableDrawRect, %duration%
 }
+
+HideToolTip:
+	ToolTip ; Hide tooltip
+Return
 
 ExitFunc(ExitReason, ExitCode)
 {
