@@ -19,7 +19,7 @@ SetKeyDelay, -1
 SetControlDelay, -1
 SetBatchLines, -1
 
-navigation_master_char := ";"
+navigation_master_char := ";;"
 navigation_language_code := "0x4090409" ; 0x4090409 is US English langauge code
 log := True
 
